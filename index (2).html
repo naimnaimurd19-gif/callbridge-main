@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CallBridge · Game Calculator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#0b0a0c;--panel:#151417;--panel2:#1d1b20;--line:#2e2b32;--gold:#d4a74a;--amber:#f2b94f;--red:#e0524c;--text:#efe9da;--mute:#a39d8f;--ok:#6cc596;
+--serif:"Cormorant Garamond",Georgia,serif;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:radial-gradient(1200px 500px at 50% -10%,#1c1710,var(--bg) 60%);background-color:var(--bg);color:var(--text);font:15px/1.5 var(--sans);min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.brand{font:700 40px/1 var(--serif);letter-spacing:.5px;color:var(--gold)}
+.brand .s{font-size:22px;margin-left:10px;letter-spacing:4px}.r{color:var(--red)}
+.sub{color:var(--mute);font-size:13px;margin-top:4px}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button,.chip{background:transparent;border:1px solid var(--line);color:var(--mute);padding:8px 14px;border-radius:8px;font:500 14px var(--sans);cursor:pointer;transition:.15s}
+nav button:hover,.chip:hover{color:var(--text);border-color:#4a4550}
+nav button.on,.chip.on{color:#16120a;background:var(--gold);border-color:var(--gold)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.grid{display:grid;grid-template-columns:1fr 340px;gap:20px;margin-top:20px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.brand{font-size:34px}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.card+.card{margin-top:16px}
+h2{font:700 26px/1.2 var(--serif);margin:0 0 4px;color:var(--text)}
+h3{font:600 15px var(--sans);margin:0 0 10px;color:var(--gold)}
+.mute{color:var(--mute);font-size:13px}
+.row{display:grid;grid-template-columns:1fr 110px;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.pn{display:flex;align-items:center;gap:10px;font-weight:500;min-width:0}
+.pn span.n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.suit{font-size:20px}
+input,select{background:#0e0d10;border:1px solid #3a3640;color:var(--text);border-radius:8px;padding:10px 12px;font:16px var(--sans);width:100%}
+input[type=number]{text-align:center;font-weight:600;font-size:18px}
+input[type=checkbox]{width:auto;accent-color:var(--gold)}
+.names{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:560px){.names{grid-template-columns:1fr}}
+label.f{display:block;font-size:13px;color:var(--mute);margin-bottom:5px}
+.btn{background:var(--gold);color:#16120a;border:0;border-radius:8px;padding:11px 18px;font:600 15px var(--sans);cursor:pointer;transition:.15s}
+.btn:hover{background:var(--amber)}.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}.btn.ghost:hover{border-color:var(--gold)}
+.btn.danger{background:transparent;color:var(--red);border:1px solid #5a2a28}.btn.danger:hover{background:#2a1413}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--gold);color:var(--gold);margin-left:6px;white-space:nowrap}
+.err{color:#ff8b85;background:#2a1413;border:1px solid #5a2a28;border-radius:8px;padding:10px 12px;margin-top:14px;font-size:14px}
+.err:empty{display:none}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{font-weight:500;color:var(--mute);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);font-size:12px}
+td{padding:10px 8px;border-bottom:1px solid #232127}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.wrapx{overflow-x:auto}
+.pos{color:var(--ok)}.neg{color:var(--red)}
+.pill{font-size:12px;padding:2px 9px;border-radius:99px}
+.pill.ok{background:#16281f;color:var(--ok)}.pill.no{background:#2a1413;color:#ff8b85}
+.rank{font:700 20px var(--serif);color:var(--gold);width:28px;display:inline-block}
+.sb li{list-style:none;display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.sb{margin:0;padding:0}.sb li:first-child{border-top:0}
+.sb .tot{font:700 26px var(--serif);text-align:right;line-height:1}.sb .d{font-size:12px;text-align:right}
+.sb li.lead .tot{color:var(--amber)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+details{border:1px solid var(--line);border-radius:10px;padding:0 14px;background:var(--panel2)}
+details+details{margin-top:10px}summary{padding:12px 0;cursor:pointer;font-weight:600;color:var(--gold)}
+.sumbar{margin-top:12px;font-size:14px;color:var(--mute)}
+.sumbar b{color:var(--amber)}
+#modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);z-index:50;padding:16px}
+#modal.show{display:flex}
+#modal .box{background:var(--panel);border:1px solid var(--gold);border-radius:12px;padding:22px;max-width:420px;width:100%}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div><div class="brand">CallBridge<span class="s"><span>♠</span><span class="r">♥</span><span class="r">♦</span><span>♣</span></span></div><div class="sub">Game Calculator</div></div>
+<nav id="nav"></nav>
+</header>
+<div class="grid"><main id="main"></main><aside id="side"></aside></div>
+</div>
+<div id="modal" role="dialog" aria-modal="true"><div class="box" id="mbox"></div></div>
+<script>
+const KEY='callbridge.v1';
+const SUITS=['♠','♥','♦','♣'],SUITC=['','r','r',''];
+const fresh=()=>({players:[1,2,3,4].map(i=>({id:'p'+i,name:'Player '+i})),rounds:[],cur:{calls:{},tricks:{},locked:false},
+ cfg:{success:'call',first:'r1',needSum:true},view:'setup',viewRound:null});
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!S||!S.players||S.players.length!==4)S=fresh();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const $=id=>document.getElementById(id);
+const pn=id=>{const i=S.players.findIndex(p=>p.id===id);return S.players[i].name.trim()||'Player '+(i+1)};
+const r1=x=>Math.round(x*10)/10;
+const fmt=x=>Number.isInteger(x)?x:x.toFixed(1);
+const sg=x=>(x>0?'+':'')+fmt(x);
+const cls=x=>x>0?'pos':x<0?'neg':'';
+const valid=v=>v!==undefined&&v!==''&&/^\d+$/.test(String(v))&&+v>=0&&+v<=13;
+
+/* ---------- Scoring (isolated so rules can change) ---------- */
+// Confirmed: a missed call loses the full call value.
+// PROVISIONAL: success scoring is configurable (cfg.success).
+function scoreCall(call,actual,cfg,isFree){
+  if(actual>=call){
+    if(cfg.success==='flat')return 1;
+    if(cfg.success==='over')return r1(call+0.1*(actual-call));
+    return call; // provisional default: success = +call value
+  }
+  return isFree?0:-call; // free first call (provisional rule): no penalty if missed
+}
+function isFreeCall(cfg,n,id,firstId){
+  return id===firstId&&(cfg.first==='all'||(cfg.first==='r1'&&n===1));
+}
+// Competition ranking: ties share a rank (1,2,2,4)
+function rankBy(items,key){
+  const s=[...items].sort((a,b)=>b[key]-a[key]);
+  return s.map((x,i)=>({...x,rank:i&&s[i-1][key]===x[key]?null:i+1})).map((x,i,a)=>{if(x.rank===null){let j=i;while(a[j].rank===null)j--;x.rank=a[j].rank}return x});
+}
+const totals=()=>{const l=S.rounds[S.rounds.length-1];const t={};S.players.forEach(p=>t[p.id]=l?l.rows.find(r=>r.id===p.id).total:0);return t};
+
+/* ---------- Views ---------- */
+function renderNav(){
+  const t=[['setup','Setup'],['play','Play'],['board','Round board'],['history','History']];
+  $('nav').innerHTML=t.map(([k,l])=>`<button data-act="view" data-v="${k}" class="${S.view===k?'on':''}">${l}</button>`).join('');
+}
+function renderSide(){
+  const tot=totals(),last=S.rounds[S.rounds.length-1];
+  const rows=rankBy(S.players.map(p=>({id:p.id,total:tot[p.id],d:last?last.rows.find(r=>r.id===p.id).delta:null})),'total');
+  $('side').innerHTML=`<div class="card"><h2>Scoreboard</h2><div class="mute">${S.rounds.length?'After round '+S.rounds.length:'No rounds scored yet'}</div>
+  <ul class="sb" style="margin-top:8px">${rows.map(r=>`<li class="${r.rank===1&&S.rounds.length?'lead':''}"><span class="rank">${r.rank}</span>
+  <span class="pn"><span class="n">${esc(pn(r.id))}</span></span><div><div class="tot">${fmt(r.total)}</div><div class="d ${r.d===null?'mute':cls(r.d)}">${r.d===null?'–':sg(r.d)+' last round'}</div></div></li>`).join('')}</ul>
+  <p class="mute" style="margin:10px 0 0">Ranked by total points. Tied players share a rank (1, 2, 2, 4) and are listed in seat order.</p></div>`;
+}
+function setupView(){
+  const n=S.rounds.length+1;
+  return `<div class="card"><h2>Players</h2><p class="mute">Names can be changed at any time. Scores stay attached to each seat.</p>
+  <div class="names">${S.players.map((p,i)=>`<div><label class="f" for="n${i}"><span class="suit ${SUITC[i]==='r'?'r':''}" style="color:${i%3?'var(--red)':'var(--gold)'}">${SUITS[i]}</span> Seat ${i+1}</label>
+  <input id="n${i}" data-k="name" data-id="${p.id}" value="${esc(p.name)}" maxlength="24" autocomplete="off"></div>`).join('')}</div></div>
+  <div class="card"><h2>Rules</h2><p class="mute">Changes apply to rounds scored from now on. Scored rounds keep their results.</p>
+  <div class="names" style="margin-top:12px"><div><label class="f" for="cs">Missed call (confirmed)</label><select id="cm" disabled><option>Lose the full call value</option></select></div>
+  <div><label class="f" for="cs">Made call (provisional)</label><select id="cs" data-k="cfg" data-f="success">
+  <option value="call" ${S.cfg.success==='call'?'selected':''}>Gain the call value</option>
+  <option value="over" ${S.cfg.success==='over'?'selected':''}>Call value + 0.1 per extra trick</option>
+  <option value="flat" ${S.cfg.success==='flat'?'selected':''}>Flat +1 point</option></select></div>
+  <div><label class="f" for="cf">First-call rule (provisional)</label><select id="cf" data-k="cfg" data-f="first">
+  <option value="off" ${S.cfg.first==='off'?'selected':''}>Off: no special treatment</option>
+  <option value="r1" ${S.cfg.first==='r1'?'selected':''}>Round 1 is call-only, so the call is each player's starting points</option>
+  <option value="all" ${S.cfg.first==='all'?'selected':''}>Every round: first caller's miss costs nothing</option></select></div>
+  <div><label class="f">Trick total</label><label style="display:flex;gap:8px;align-items:center;padding:10px 0"><input type="checkbox" data-k="cfg" data-f="needSum" ${S.cfg.needSum?'checked':''}> Require tricks to add up to 13</label></div></div>
+  <p class="mute">The first caller rotates one seat each round, starting with Seat 1. The first-call rule only waives the penalty for that player; it never skips the round.</p>
+  <div class="actions"><button class="btn" data-act="view" data-v="play">${S.rounds.length?'Continue to round '+n:'Start round 1'}</button>
+  <button class="btn danger" data-act="newgame">New game</button></div></div>`;
+}
+function playView(){
+  const n=S.rounds.length+1,c=S.cur,first=S.players[(n-1)%4];
+  if(n===1)return playCallOnly(n,first);
+  const lock=c.locked;
+  const rows=S.players.map((p,i)=>{
+    const free=isFreeCall(S.cfg,n,p.id,first.id);
+    const v=(lock?c.tricks:c.calls)[p.id];
+    return `<div class="row"><div class="pn"><span class="suit" style="color:${i%3?'var(--red)':'var(--gold)'}">${SUITS[i]}</span><span class="n">${esc(pn(p.id))}</span>
+    ${p.id===first.id?'<span class="badge">First call</span>':''}${free&&!lock?'<span class="badge">Free</span>':''}</div>
+    <div>${lock?`<div class="mute" style="text-align:center;font-size:12px">Called ${c.calls[p.id]}</div>`:''}
+    <input type="number" min="0" max="13" step="1" inputmode="numeric" aria-label="${lock?'Tricks won by ':'Call for '}${esc(pn(p.id))}" data-k="${lock?'tricks':'calls'}" data-id="${p.id}" value="${v===undefined?'':v}"></div></div>`}).join('');
+  return `<div class="card"><h2>Round ${n}</h2><p class="mute">${lock?'Step 2 of 2. Enter the tricks each player actually won.':'Step 1 of 2. Enter every player’s call (0–13). '+esc(pn(first.id))+' calls first.'}</p>
+  <div style="margin-top:8px">${rows}</div>
+  ${lock?`<div class="sumbar">Tricks entered: <b id="sum">0</b> / 13</div>`:''}
+  <div class="err" id="err" role="alert"></div>
+  <div class="actions">${lock?`<button class="btn" data-act="score">Score round ${n}</button><button class="btn ghost" data-act="unlock">Edit calls</button>`:`<button class="btn" data-act="lock">Lock calls</button><button class="btn ghost" data-act="clearcalls">Clear</button>`}</div></div>`;
+}
+function playOne(n,first){
+  const c=S.cur;
+  const rows=S.players.map((p,i)=>`<div class="row" style="grid-template-columns:1fr 90px 90px"><div class="pn"><span class="suit" style="color:${i%3?'var(--red)':'var(--gold)'}">${SUITS[i]}</span><span class="n">${esc(pn(p.id))}</span>${p.id===first.id?'<span class="badge">First call</span>':''}</div>
+  <div><div class="mute" style="text-align:center;font-size:12px">Call</div><input type="number" min="0" max="13" step="1" inputmode="numeric" aria-label="Call for ${esc(pn(p.id))}" data-k="calls" data-id="${p.id}" value="${c.calls[p.id]===undefined?'':c.calls[p.id]}"></div>
+  <div><div class="mute" style="text-align:center;font-size:12px">Tricks won</div><input type="number" min="0" max="13" step="1" inputmode="numeric" aria-label="Tricks won by ${esc(pn(p.id))}" data-k="tricks" data-id="${p.id}" value="${c.tricks[p.id]===undefined?'':c.tricks[p.id]}"></div></div>`).join('');
+  return `<div class="card"><h2>Round 1</h2><p class="mute">Each player makes one call, so there is no locking. Enter every call and the tricks each player won, then score. These points carry into Round 2, which uses the full call-then-play flow.</p>
+  <div style="margin-top:8px">${rows}</div><div class="sumbar">Tricks entered: <b id="sum">0</b> / 13</div><div class="err" id="err" role="alert"></div>
+  <div class="actions"><button class="btn" data-act="score">Score round 1</button><button class="btn ghost" data-act="clearcalls">Clear</button></div></div>`;
+}
+function playCallOnly(n,first){
+  const c=S.cur;
+  const rows=S.players.map((p,i)=>`<div class="row"><div class="pn"><span class="suit" style="color:${i%3?'var(--red)':'var(--gold)'}">${SUITS[i]}</span><span class="n">${esc(pn(p.id))}</span>${p.id===first.id?'<span class="badge">First call</span>':''}</div>
+  <div><input type="number" min="0" max="13" step="1" inputmode="numeric" aria-label="Call for ${esc(pn(p.id))}" data-k="calls" data-id="${p.id}" value="${c.calls[p.id]===undefined?'':c.calls[p.id]}"></div></div>`).join('');
+  return `<div class="card"><h2>Round 1</h2><p class="mute">Round 1 is call-only. Each player makes one call (0–13) and that call becomes their starting points. No tricks are entered. From Round 2, calls are checked against tricks won.</p>
+  <div style="margin-top:8px">${rows}</div><div class="err" id="err" role="alert"></div>
+  <div class="actions"><button class="btn" data-act="score">Finish round 1</button><button class="btn ghost" data-act="clearcalls">Clear</button></div></div>`;
+}
+function roundTable(r,withTotal){
+  const ranked=rankBy(r.rows,'delta');
+  return `<div class="wrapx"><table><thead><tr><th>${withTotal?'':'Rank'}</th><th>Player</th><th class="num">Call</th><th class="num">Tricks</th><th>Result</th><th class="num">Points</th>${withTotal?'<th class="num">Total</th>':''}</tr></thead><tbody>
+  ${(withTotal?r.rows.map(x=>({...x,rank:''})):ranked).map(x=>`<tr><td>${withTotal?'':'<span class="rank">'+x.rank+'</span>'}</td><td>${esc(pn(x.id))}${x.free?'<span class="badge">Free</span>':''}</td>
+  <td class="num">${x.call}</td><td class="num">${x.act===null?'–':x.act}</td><td><span class="pill ${x.ok?'ok':'no'}">${x.act===null?'Banked':x.ok?'Made':'Missed'}</span></td>
+  <td class="num ${cls(x.delta)}">${sg(x.delta)}</td>${withTotal?`<td class="num">${fmt(x.total)}</td>`:''}</tr>`).join('')}</tbody></table></div>`;
+}
+function boardView(){
+  if(!S.rounds.length)return `<div class="card"><h2>Round board</h2><p class="mute">Score a round to see its leaderboard here.</p><div class="actions"><button class="btn" data-act="view" data-v="play">Go to Play</button></div></div>`;
+  const sel=S.viewRound&&S.rounds.find(r=>r.n===S.viewRound)?S.viewRound:S.rounds.length;
+  const r=S.rounds.find(x=>x.n===sel);
+  return `<div class="card"><h2>Round ${r.n} leaderboard</h2><p class="mute">Ranked by points earned in this round only. The overall standings are in the scoreboard.</p>
+  <div class="chips">${S.rounds.map(x=>`<button class="chip ${x.n===sel?'on':''}" data-act="pick" data-n="${x.n}">Round ${x.n}</button>`).join('')}</div>${roundTable(r,false)}</div>`;
+}
+function historyView(){
+  if(!S.rounds.length)return `<div class="card"><h2>History</h2><p class="mute">Completed rounds appear here with calls, tricks and running totals.</p></div>`;
+  return `<div class="card"><h2>History</h2><p class="mute" style="margin-bottom:12px">${S.rounds.length} round${S.rounds.length>1?'s':''} played. Open a round to inspect it.</p>
+  ${[...S.rounds].reverse().map((r,i)=>`<details ${i===0?'open':''}><summary>Round ${r.n} · first call ${esc(pn(r.firstId))}</summary>${roundTable(r,true)}<div style="height:10px"></div></details>`).join('')}
+  <div class="actions"><button class="btn danger" data-act="undo">Undo last round</button></div></div>`;
+}
+function render(){
+  renderNav();renderSide();
+  $('main').innerHTML={setup:setupView,play:playView,board:boardView,history:historyView}[S.view]();
+  updSum();save();
+}
+function updSum(){const e=$('sum');if(!e)return;const s=S.players.reduce((a,p)=>a+(valid(S.cur.tricks[p.id])?+S.cur.tricks[p.id]:0),0);e.textContent=s}
+const err=m=>{const e=$('err');if(e)e.textContent=m};
+
+/* ---------- Actions ---------- */
+function ask(title,msg,label,fn){
+  $('mbox').innerHTML=`<h2>${esc(title)}</h2><p class="mute" style="font-size:15px">${msg}</p><div class="actions"><button class="btn" id="mok">${esc(label)}</button><button class="btn ghost" id="mno">Cancel</button></div>`;
+  $('modal').classList.add('show');$('mno').focus();
+  const close=()=>$('modal').classList.remove('show');
+  $('mok').onclick=()=>{close();fn()};$('mno').onclick=close;
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').classList.remove('show')});
+function checkAll(map,label){
+  for(const p of S.players){if(!valid(map[p.id]))return `${label} for ${pn(p.id)} must be a whole number from 0 to 13.`}
+  return '';
+}
+function commit(){
+  const n=S.rounds.length+1,first=S.players[(n-1)%4].id,prev=totals();
+  const rows=S.players.map(p=>{
+    const call=+S.cur.calls[p.id],act=n===1?null:+S.cur.tricks[p.id],free=n>1&&isFreeCall(S.cfg,n,p.id,first);
+    const delta=n===1?call:scoreCall(call,act,S.cfg,free);
+    return{id:p.id,call,act,ok:n===1||act>=call,free,delta,total:r1(prev[p.id]+delta)};
+  });
+  S.rounds.push({n,firstId:first,cfg:{...S.cfg},rows});
+  S.cur={calls:{},tricks:{},locked:false};S.view='board';S.viewRound=n;render();
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act;
+  if(a==='view'){S.view=b.dataset.v;render()}
+  else if(a==='pick'){S.viewRound=+b.dataset.n;render()}
+  else if(a==='lock'){const m=checkAll(S.cur.calls,'Call');if(m)return err(m);S.cur.locked=true;render()}
+  else if(a==='unlock'){S.cur.locked=false;render()}
+  else if(a==='clearcalls'){S.cur.calls={};if(S.rounds.length===0)S.cur.tricks={};render()}
+  else if(a==='score'){
+    const one=S.rounds.length===0;let m=one?checkAll(S.cur.calls,'Call'):checkAll(S.cur.tricks,'Tricks won');
+    const sum=S.players.reduce((s,p)=>s+(+S.cur.tricks[p.id]||0),0);
+    if(!m&&!one&&S.cfg.needSum&&sum!==13)m=`Tricks add up to ${sum}, but a round has 13. Fix the counts or turn off the 13-trick check in Setup.`;
+    if(m)return err(m);
+    ask(`Score round ${S.rounds.length+1}?`,'This adds the results to the scoreboard and starts the next round. You can still undo it from History.','Score round',commit);
+  }
+  else if(a==='undo')ask('Undo last round?',`Round ${S.rounds.length} will be removed and totals will return to the previous round. Its calls and tricks will be restored for editing.`,'Undo round',()=>{
+    const r=S.rounds.pop();S.cur={calls:{},tricks:{},locked:true};r.rows.forEach(x=>{S.cur.calls[x.id]=x.call;S.cur.tricks[x.id]=x.act});S.view='play';render()});
+  else if(a==='newgame')ask('Start a new game?','All rounds and scores will be erased. Player names and rules are kept. This cannot be undone.','Erase and restart',()=>{
+    S.rounds=[];S.cur={calls:{},tricks:{},locked:false};S.view='setup';S.viewRound=null;render()});
+});
+document.addEventListener('input',e=>{
+  const t=e.target,k=t.dataset.k;if(!k)return;
+  if(k==='name'){S.players.find(p=>p.id===t.dataset.id).name=t.value;save();renderSide()}
+  else if(k==='calls'||k==='tricks'){S.cur[k][t.dataset.id]=t.value;save();updSum();err('')}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;if(t.dataset.k!=='cfg')return;
+  S.cfg[t.dataset.f]=t.type==='checkbox'?t.checked:t.value;save();
+});
+render();
+</script>
+</body>
+</html>
